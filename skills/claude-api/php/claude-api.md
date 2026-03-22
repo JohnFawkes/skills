@@ -217,6 +217,27 @@ foreach ($message->content as $block) {
 
 ---
 
+## Prompt Caching
+
+`system:` takes an array of text blocks; set `cacheControl` on the last block. Array-shape syntax (camelCase keys) is idiomatic. For placement patterns and the silent-invalidator audit checklist, see `shared/prompt-caching.md`.
+
+```php
+$message = $client->messages->create(
+    model: 'claude-opus-4-6',
+    maxTokens: 16000,
+    system: [
+        ['type' => 'text', 'text' => $longSystemPrompt, 'cacheControl' => ['type' => 'ephemeral']],
+    ],
+    messages: [['role' => 'user', 'content' => 'Summarize the key points']],
+);
+```
+
+For 1-hour TTL: `'cacheControl' => ['type' => 'ephemeral', 'ttl' => '1h']`. There's also a top-level `cacheControl:` on `messages->create(...)` that auto-places on the last cacheable block.
+
+Verify hits via `$message->usage->cacheCreationInputTokens` / `$message->usage->cacheReadInputTokens`.
+
+---
+
 ## Beta Features & Server-Side Tools
 
 **`betas:` is NOT a param on `$client->messages->create()`** — it only exists on the beta namespace. Use it for features that need an explicit opt-in header:
